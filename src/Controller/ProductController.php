@@ -12,7 +12,6 @@ use App\interface\ProductServiceInterface;
 use App\service\payment\PaymentService;
 use App\service\payment\ValidationService;
 
-
 class ProductController extends AbstractController
 {
     private EntityManagerInterface $entityManager;
@@ -44,7 +43,6 @@ class ProductController extends AbstractController
         return new JsonResponse($productService->calculatePrice($productRequest), 200);
     }
 
-
     #[Route('/product/pay', name: 'pay_product', methods: ['POST'])]
     public function pay(Request $request, ProductServiceInterface $productService)
     {
@@ -64,6 +62,4 @@ class ProductController extends AbstractController
         );
         return new JsonResponse($result, 200);
     }
-
-
 }
