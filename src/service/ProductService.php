@@ -17,6 +17,7 @@ class ProductService implements ProductServiceInterface
     private $taxCalculationService;
     private $discountCalculationService;
     private $finalPriceCalculationService;
+
     public function __construct(
         EntityManagerInterface $entityManager,
         ValidationService $validationService,

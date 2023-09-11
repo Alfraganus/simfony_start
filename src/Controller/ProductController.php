@@ -54,7 +54,7 @@ class ProductController extends AbstractController
 
         $validationErrors = $this->paymentValidation->validateInput($productRequest);
         if ($validationErrors) {
-            return new JsonResponse($validationErrors, 200);
+            return new JsonResponse($validationErrors, 400);
         }
         $result = $this->paymentService->executePurchase(
             $productService->calculatePrice($productRequest)['total_price'],
