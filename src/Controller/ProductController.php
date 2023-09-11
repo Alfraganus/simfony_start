@@ -1,127 +1,65 @@
 <?php
-// src/Controller/HelloController.php
 
 namespace App\Controller;
 
-use App\Entity\Country;
-use App\Entity\Coupon;
-use App\Entity\Product;
-use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Component\Validator\Validator\ValidatorInterface;
-use Symfony\Component\Validator\Constraints as Assert;
-
+use Doctrine\ORM\EntityManagerInterface;
+use App\dto\ProductRequest;
+use App\interface\ProductServiceInterface;
+use App\service\payment\PaymentService;
+use App\service\payment\ValidationService;
 
 class ProductController extends AbstractController
 {
+    private EntityManagerInterface $entityManager;
+    private PaymentService $paymentService;
+    private ValidationService $paymentValidation;
 
-    private $entityManager;
+    const PAYMENT_PROCESSOR_STRIPE = 'paypal';
+    const PAYMENT_PROCESSOR_PAYPAL = 'stripe';
 
-    public function __construct(EntityManagerInterface $entityManager)
+    public function __construct(
+        EntityManagerInterface $entityManage,
+        PaymentService $paymentService,
+        ValidationService $paymentValidation
+    )
     {
-        $this->entityManager = $entityManager;
+        $this->entityManager = $entityManage;
+        $this->paymentService = $paymentService;
+        $this->paymentValidation = $paymentValidation;
     }
 
-    #[Route('/product/get-price', name: 'test', methods: ['POST'])]
-    public function getPrice(Request $request, ValidatorInterface $validator)
+    #[Route('/product/get-price', name: 'get_product_price', methods: ['POST'])]
+    public function getPrice(Request $request, ProductServiceInterface $productService): JsonResponse
     {
-        $data = $request->request->all();
+        $productRequest = new ProductRequest();
+        $productRequest->product = $request->request->get('product');
+        $productRequest->taxNumber = $request->request->get('taxNumber');
+        $productRequest->couponCode = $request->request->get('couponCode');
 
-        $validationErrors = $this->validateInput($data, $validator);
+        return new JsonResponse($productService->calculatePrice($productRequest), 200);
+    }
+
+    #[Route('/product/pay', name: 'pay_product', methods: ['POST'])]
+    public function pay(Request $request, ProductServiceInterface $productService)
+    {
+        $productRequest = new ProductRequest();
+        $productRequest->product = $request->request->get('product');
+        $productRequest->taxNumber = $request->request->get('taxNumber');
+        $productRequest->couponCode = $request->request->get('couponCode');
+        $productRequest->paymentProcessor = $request->request->get('paymentProcessor');
+
+        $validationErrors = $this->paymentValidation->validateInput($productRequest);
         if ($validationErrors) {
-            return new JsonResponse(['errors' => $validationErrors], 400);
+            return new JsonResponse($validationErrors, 400);
         }
-
-        $productId = $data['product'];
-        $taxNumber = $data['taxNumber'];
-        $couponCode = $data['couponCode']??null;
-
-        $product = $this->entityManager->getRepository(Product::class)->find($productId);
-
-        if (!$product) {
-            return new JsonResponse(['error' => 'Product not found'], 400);
-        }
-
-        $country = $this->getCountryByTaxNumber($taxNumber);
-
-        if (!$country) {
-            return new JsonResponse(['error' => 'Invalid tax number format'], 400);
-        }
-
-        $taxPercentage = $this->calculateTaxPercentage($country);
-
-        $basePrice = $product->getPrice();
-
-        $discount = 0;
-        $coupon = $this->entityManager->getRepository(Coupon::class)->findOneBy(['code' => $couponCode]);
-
-        if ($coupon) {
-            $couponType = $coupon->getType();
-            $couponValue = $coupon->getValue();
-
-            if ($couponType === 'fixed') {
-                $discount = $couponValue;
-            } elseif ($couponType === 'percentage') {
-                $percentageDiscount = ($couponValue / 100) * $basePrice;
-                $discount = $percentageDiscount;
-            }
-        }
-
-        $taxAmount = ($basePrice * ($taxPercentage / 100));
-        $finalPrice = $basePrice - $discount + $taxAmount;
-
-        return new JsonResponse([
-            'total_price' => $finalPrice,
-            'price'=>$basePrice,
-            'tax'=>$taxAmount,
-            'discount'=>$discount
-        ], 200);
-    }
-
-
-    private function getCountryByTaxNumber(string $taxNumber)
-    {
-        $country = $this->entityManager->getRepository(Country::class)->findOneBy(['regex_tax_number' => $taxNumber]);
-
-        return $country;
-    }
-
-    private function calculateTaxPercentage(Country $country)
-    {
-        return $country->getTaxPercentage();
-    }
-
-
-    private function validateInput(array $data, ValidatorInterface $validator)
-    {
-        $commonConstraints = [
-            new Assert\NotBlank(),
-            new Assert\Regex(['pattern' => '/^(DE|IT|GR|FR)\d+$/']),
-        ];
-
-        $constraints = [
-            'product' =>  new Assert\NotBlank(),
-            'taxNumber' => $commonConstraints,
-        ];
-
-        if (isset($data['couponCode'])) {
-            $constraints['couponCode'] = [];
-        }
-
-        $collectionConstraint = new Assert\Collection($constraints);
-
-        $violations = $validator->validate($data, $collectionConstraint);
-
-        $errors = [];
-        foreach ($violations as $violation) {
-            $propertyPath = $violation->getPropertyPath();
-            $message = $violation->getMessage();
-            $errors[$propertyPath] = $message;
-        }
-
-        return $errors;
+        $result = $this->paymentService->executePurchase(
+            $productService->calculatePrice($productRequest)['total_price'],
+            self::PAYMENT_PROCESSOR_PAYPAL
+        );
+        return new JsonResponse($result, 200);
     }
 }

@@ -19,20 +19,33 @@ final class Version20230910101903 extends AbstractMigration
 
     public function up(Schema $schema): void
     {
-        $this->addSql('CREATE TABLE country (id INT AUTO_INCREMENT NOT NULL, name VARCHAR(255) NOT NULL, regex_tax_number VARCHAR(255) NOT NULL, tax_percentage DOUBLE PRECISION NOT NULL, PRIMARY KEY(id)) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB');
-        $this->addSql('CREATE TABLE coupon (id INT AUTO_INCREMENT NOT NULL, code VARCHAR(255) NOT NULL, type VARCHAR(255) NOT NULL, value INT NOT NULL, is_active TINYINT(1) NOT NULL, PRIMARY KEY(id)) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB');
-        $this->addSql('CREATE TABLE payment_service (id INT AUTO_INCREMENT NOT NULL, name VARCHAR(255) NOT NULL, PRIMARY KEY(id)) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB');
-        $this->addSql('CREATE TABLE product (id INT AUTO_INCREMENT NOT NULL, name VARCHAR(255) NOT NULL, price INT NOT NULL, PRIMARY KEY(id)) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB');
+        $countryTable = $schema->createTable('country');
+        $countryTable->addColumn('id', 'integer', ['autoincrement' => true]);
+        $countryTable->addColumn('name', 'string', ['length' => 255]);
+        $countryTable->addColumn('regex_tax_number', 'string', ['length' => 255]);
+        $countryTable->addColumn('tax_percentage', 'float');
+        $countryTable->setPrimaryKey(['id']);
 
+        $couponTable = $schema->createTable('coupon');
+        $couponTable->addColumn('id', 'integer', ['autoincrement' => true]);
+        $couponTable->addColumn('code', 'string', ['length' => 255]);
+        $couponTable->addColumn('type', 'string', ['length' => 255]);
+        $couponTable->addColumn('value', 'integer');
+        $couponTable->addColumn('is_active', 'boolean');
+        $couponTable->setPrimaryKey(['id']);
 
+        $productTable = $schema->createTable('product');
+        $productTable->addColumn('id', 'integer', ['autoincrement' => true]);
+        $productTable->addColumn('name', 'string', ['length' => 255]);
+        $productTable->addColumn('price', 'integer');
+        $productTable->setPrimaryKey(['id']);
     }
 
     public function down(Schema $schema): void
     {
-        $this->addSql('DROP TABLE country');
-        $this->addSql('DROP TABLE coupon');
-        $this->addSql('DROP TABLE payment_service');
-        $this->addSql('DROP TABLE product');
-
+        $schema->dropTable('product');
+        $schema->dropTable('payment_service');
+        $schema->dropTable('coupon');
+        $schema->dropTable('country');
     }
 }
