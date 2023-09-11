@@ -16,6 +16,13 @@ class PaypalPaymentProcessorService implements PaymentProcessorInterface
 
     public function run(int $price)
     {
-         $this->paypalPaymentProcessor->pay($price);
+        try {
+            $this->paypalPaymentProcessor->pay($price);
+            return [
+              'message'=>'Payment is successfull'
+            ];
+        }  catch (\Exception $exception) {
+            throw new \Exception($exception->getMessage());
+        }
     }
 }

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Service\payment;
+namespace App\service\payment;
 
 use App\interface\PaymentProcessorInterface;
 use Systemeio\TestForCandidates\PaymentProcessor\StripePaymentProcessor;
@@ -13,8 +13,8 @@ class StripePaymentProcessorService implements PaymentProcessorInterface
         $this->stripePaymentProcessor = $stripePaymentProcessor;
     }
 
-    public function run(int $price)
+    public function run(int $price) : bool
     {
-        return $this->stripePaymentProcessor->processPayment($price);
+       return  $this->stripePaymentProcessor->processPayment($price);
     }
 }

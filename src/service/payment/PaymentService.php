@@ -2,22 +2,27 @@
 
 namespace App\service\payment;
 
+use App\Entity\Product;
 use Exception;
-use Systemeio\TestForCandidates\PaymentProcessor\PaypalPaymentProcessor;
-use Systemeio\TestForCandidates\PaymentProcessor\StripePaymentProcessor;
 
 class PaymentService
 {
     private $paypalPaymentProcessor;
     private $stripePaymentProcessor;
+    private $validation;
 
-    public function __construct(PaypalPaymentProcessorService $paypalPaymentProcessor, StripePaymentProcessorService $stripePaymentProcessor)
+    public function __construct(
+        PaypalPaymentProcessorService $paypalPaymentProcessor,
+        StripePaymentProcessorService $stripePaymentProcessor,
+        ValidationService $validationService
+    )
     {
         $this->paypalPaymentProcessor = $paypalPaymentProcessor;
         $this->stripePaymentProcessor = $stripePaymentProcessor;
+        $this->validation = $validationService;
     }
 
-    public function executePurchase($sum, $paymentProcessor): array
+    public function executePurchase($sum, $paymentProcessor)/*: array*/
     {
         try {
             $paymentResult = match ($paymentProcessor) {

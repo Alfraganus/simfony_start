@@ -2,8 +2,6 @@
 
 namespace App\dto;
 
-use Symfony\Component\Validator\Constraints as Assert;
-
 class ProductRequest
 {
     /**
