@@ -55,8 +55,10 @@ class ProductService implements ProductServiceInterface
         /*check if we have discount*/
         $coupon = $this->entityManager->getRepository(Coupon::class)->findOneBy(['code' => $request->couponCode ?? null]);
         $discount = $coupon ? $this->discountCalculationService->calculateDiscount($coupon, $basePrice) : 0;
+
         $taxPercentage = $this->taxCalculationService->calculateTaxPercentage($taxBycountry); //taxing
         $taxAmount = ($basePrice * ($taxPercentage / 100));
+
         $finalPrice = $this->finalPriceCalculationService->calculateFinalPrice($basePrice, $taxAmount, $discount);
 
         return [
