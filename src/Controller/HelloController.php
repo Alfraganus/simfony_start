@@ -4,19 +4,9 @@
 namespace App\Controller;
 
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\Routing\Annotation\Route;
-
+use Systemeio\TestForCandidates\PaymentProcessor\StripePaymentProcessor;
 class HelloController extends AbstractController
 {
 
-    #[Route('/test', name:'test')]
-    public function helloWorld()
-    {
-        $response = [
-            'message' => 'Hello, World!',
-        ];
 
-        return new JsonResponse($response);
-    }
 }
