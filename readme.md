@@ -7,6 +7,11 @@ task was developed by Sulaymonov Gulomjon.
 ## Project Information
 
 This project uses Apache as the web server, PHP 8.2, and MySQL 8.0 as the database management system.
+## Calculation of Price (POST)
+{{server_url}}/product/get-price
+
+## Payment operation (POST)
+{{server_url}}/product/pay
 
 ## Operations
 
